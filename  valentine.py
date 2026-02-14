@@ -1,7 +1,5 @@
 import streamlit as st
-import base64
 import os
-import time
 
 # 1. Page Configuration
 st.set_page_config(page_title="My Valentine ❤️", page_icon="💖")
@@ -27,25 +25,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Media Function (The "Force Refresh" Version)
+# 3. Media Function (Compatible Version - Fixes the TypeError)
 def play_media(file_path):
     if os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            data = f.read()
-            b64 = base64.b64encode(data).decode()
-            # Timestamp makes the URL unique so the browser swaps the song
-            ts = int(time.time())
-            md = f"""
-                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px;">
-                    <p style="margin:0; font-size: 12px; color: white;">🎵 Press play for the vibe ({file_path}):</p>
-                    <audio autoplay loop controls id="player_{ts}" style="width: 100%;">
-                        <source src="data:audio/mp4;base64,{b64}#t={ts}" type="audio/mp4">
-                    </audio>
-                </div>
-                """
-            st.markdown(md, unsafe_allow_html=True)
+        # Removed 'key' argument to avoid the TypeError on older Streamlit versions
+        st.audio(file_path, format="audio/mp4", autoplay=True)
     else:
-        st.info(f"🎵 Note: Add {file_path} to Downloads for music!")
+        st.info(f"🎵 Note: {file_path} not found in sidebar!")
 
 # 4. State Management
 if 'auth' not in st.session_state: st.session_state.auth = False
@@ -62,7 +48,7 @@ if not st.session_state.auth:
         else:
             st.error("Access denied, Try again Love ❤ !")
 
-# --- AUTHORIZED CONTENT ---
+# --- AUTHORIZED CONTENT (Runs only after login) ---
 else:
     # DYNAMIC MUSIC SELECTION
     if st.session_state.step == 'memory':
@@ -96,8 +82,6 @@ else:
         st.header("Feb 8: Propose Day ✨")
         if os.path.exists("proposal.png"):
             st.image("proposal.png")
-        else:
-            st.write("*(Make sure proposal.png is in your Downloads folder!)*")
         st.write("I'd choose you every single time. Will you be mine?")
         if st.button("Next: Memory Lane 📸"):
             st.session_state.step = 'memory'
@@ -118,7 +102,6 @@ else:
                     st.write(f"📷 Photo {i}")
 
         st.write("---")
-        st.write("I cherish every single second of us.")
         if st.button("Next: Hug Day 🤗"):
             st.session_state.step = 'hug'
             st.rerun()
@@ -146,15 +129,23 @@ else:
     # STEP 7: VALENTINE'S DAY FINALE
     elif st.session_state.step == 'vday':
         st.balloons()
+        # This adds the flower background image back specifically for this page
         st.markdown("""
             <style>
             .stApp {
-                background-image: url("https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=2070");
-                background-size: cover;
+                background: url("https://images.unsplash.com/photo-1490750967868-88aa4486c946?q=80&w=2070") no-repeat center center fixed !important;
+                background-size: cover !important;
+            }
+            .poem-box {
+                background-color: rgba(0, 0, 0, 0.4) !important; /* Making it a bit darker so text is easier to read over flowers */
+                padding: 25px;
+                border-radius: 15px;
+                border: 1px solid white;
+                text-align: center;
+                font-style: italic;
             }
             </style>
             """, unsafe_allow_html=True)
-            
         st.title("Happy Valentine's Day! 💖")
         st.markdown("""
          <div class="poem-box">
@@ -173,4 +164,3 @@ else:
         st.write("Forever yours, bbg Asmita")
         if st.button("Back to Start"):
             st.session_state.step = 'welcome'
-            st.rerun()
